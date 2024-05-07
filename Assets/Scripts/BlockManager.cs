@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class BlockManager : MonoBehaviour
@@ -9,19 +8,16 @@ public class BlockManager : MonoBehaviour
     private int rows = 50;
     private int columns = 50;
     public float cellSize = 1.2f;
-    private int gridWidth;
 
-    private GameObject[] gridCells;
+    private GameObject[,] gridCells;
     private bool[,] currentCellStates;
     private bool[,] nextCellStates;
+    private float heightOffset = 0f;
 
     void Start()
     {
-        gridWidth = columns;
-
         InstantiateGrid();
-        LoadGridCellsToArray();
-
+        //LoadGridCellsToArray();
 
         SetCellStatus(26, 25, true);
         SetCellStatus(25, 26, true);
@@ -38,41 +34,26 @@ public class BlockManager : MonoBehaviour
 
     void InstantiateGrid()
     {
-        for(int row = -rows/2; row < rows/2; row++)
-        {
-            for(int col = -columns/2; col < columns/2; col++)
-            {
-                Vector3 position = new Vector3(col * cellSize, 0f, row * cellSize);
-                Instantiate(cellPrefab, position, Quaternion.identity, transform);
-            }
-        }
-    }
-
-    void LoadGridCellsToArray()
-    {
-        int childCount = transform.childCount;
-        gridCells = new GameObject[childCount];
+        gridCells = new GameObject[rows, columns];
         currentCellStates = new bool[rows, columns];
         nextCellStates = new bool[rows, columns];
 
-        for (int i = 0; i < childCount; i++)
+        for (int row = 0; row < rows; row++)
         {
-            gridCells[i] = transform.GetChild(i).gameObject;
-            gridCells[i].SetActive(false);
-
-            int x = i % gridWidth;
-            int y = i / gridWidth;
-            currentCellStates[y, x] = false;
+            for (int col = 0; col < columns; col++)
+            {
+                Vector3 position = new Vector3(col * cellSize, heightOffset, row * cellSize);
+                gridCells[row, col] = Instantiate(cellPrefab, position, Quaternion.identity, transform);
+                gridCells[row, col].SetActive(false);
+            }
         }
     }
 
     public void SetCellStatus(int x, int y, bool isActive)
     {
-        int index = y * gridWidth + x;
-
-        if(index >= 0 && index < gridCells.Length)
+        if (x >= 0 && x < columns && y >= 0 && y < rows)
         {
-            gridCells[index].SetActive(isActive);
+            gridCells[y, x].SetActive(isActive);
             currentCellStates[y, x] = isActive;
         }
         else
@@ -89,7 +70,6 @@ public class BlockManager : MonoBehaviour
             {
                 int aliveNeighbors = CountAliveNeighbors(x, y);
                 bool currentState = currentCellStates[y, x];
-
 
                 if (currentState && (aliveNeighbors < 2 || aliveNeighbors > 3))
                 {
@@ -135,12 +115,14 @@ public class BlockManager : MonoBehaviour
 
     void ApplyNextCellStates()
     {
+        heightOffset += cellSize;
+
         for (int y = 0; y < rows; y++)
         {
             for (int x = 0; x < columns; x++)
             {
-                int index = y * gridWidth + x;
-                gridCells[index].SetActive(nextCellStates[y, x]);
+                gridCells[y, x] = Instantiate(cellPrefab, new Vector3(x * cellSize, heightOffset, y * cellSize), Quaternion.identity, transform);
+                gridCells[y, x].SetActive(nextCellStates[y, x]);
                 currentCellStates[y, x] = nextCellStates[y, x];
             }
         }
