@@ -1,10 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class BlockManager : MonoBehaviour
 {
     public GameObject cellPrefab;
+    public AudioManager audioPlay;
+
+    public Button button;
+    public bool routineStarted = false;
     private int rows = 50;
     private int columns = 50;
     public float cellSize = 1.2f;
@@ -14,15 +19,21 @@ public class BlockManager : MonoBehaviour
     private bool[,] nextCellStates;
     private float heightOffset = 0f;
 
-    private int maxLayer = 50;
-    private int currentLayer = 0;
+    public int maxLayer = 50;
+    public int currentLayer = 0;
 
-    public float generationDelay = 0.5f;
+    public float generationDelay = 0.2f;
 
 
     void Start()
     {
         InitializeGrid();
+    }
+
+    public void ButtonClicked()
+    {
+        StartCoroutine(GenerateLayers());
+        routineStarted = true;
     }
 
     public void InitializeGrid()
@@ -34,8 +45,6 @@ public class BlockManager : MonoBehaviour
         SetCellStatus(26, 26, true);
         SetCellStatus(26, 27, true);
         SetCellStatus(27, 27, true);
-
-        StartCoroutine(GenerateLayers());
     }
 
     IEnumerator GenerateLayers()
@@ -44,6 +53,8 @@ public class BlockManager : MonoBehaviour
         {
             CalculateNextCellStates();
             ApplyNextCellStates();
+            audioPlay.PlayPop();
+            audioPlay.pitchIncrement += 0.02f;
             currentLayer++; 
 
             if (currentLayer >= maxLayer)
