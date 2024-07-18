@@ -14,22 +14,45 @@ public class BlockManager : MonoBehaviour
     private bool[,] nextCellStates;
     private float heightOffset = 0f;
 
+    private int maxLayer = 50;
+    private int currentLayer = 0;
+
+    public float generationDelay = 0.5f;
+
+
     void Start()
     {
+        InitializeGrid();
+    }
+
+    public void InitializeGrid()
+    {
         InstantiateGrid();
-        //LoadGridCellsToArray();
 
         SetCellStatus(26, 25, true);
         SetCellStatus(25, 26, true);
         SetCellStatus(26, 26, true);
         SetCellStatus(26, 27, true);
         SetCellStatus(27, 27, true);
+
+        StartCoroutine(GenerateLayers());
     }
 
-    void Update()
+    IEnumerator GenerateLayers()
     {
-        CalculateNextCellStates();
-        ApplyNextCellStates();
+        while (true)
+        {
+            CalculateNextCellStates();
+            ApplyNextCellStates();
+            currentLayer++; 
+
+            if (currentLayer >= maxLayer)
+            {
+                yield break;
+            }
+
+            yield return new WaitForSeconds(generationDelay);
+        }
     }
 
     void InstantiateGrid()
